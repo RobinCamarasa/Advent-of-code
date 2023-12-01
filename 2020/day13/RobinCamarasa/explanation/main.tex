@@ -1,0 +1,66 @@
+\documentclass[runningheads]{llncs}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{verbatim}
+\usepackage{hyperref}
+
+
+\begin{document}
+\title{
+    Explanation Math of Part 2 of day 13 of the advent of code 2020
+}
+
+\author{
+    Robin Camarasa
+}
+
+\maketitle
+
+A full description of the problem is given at the following \textbf{\href{https://adventofcode.com/2020/day/13}{link}}. (To access part one you must finish part one first)
+
+In a math way, the problem can be defined as follow:
+
+\begin{align}
+    \begin{split}
+    t & \equiv 0 \mod{13}\\
+    t + 3 & \equiv 0 \mod{41}\\
+    t + 13 & \equiv 0 \mod{641}\\
+    t + 25 & \equiv 0 \mod{19}\\
+    t + 30 & \equiv 0 \mod{17}\\
+    t + 42 & \equiv 0 \mod{29}\\
+    t + 44 & \equiv 0 \mod{661}\\
+    t + 50 & \equiv 0 \mod{37}\\
+    t + 67 & \equiv 0 \mod{23}\\
+    \end{split}
+\end{align}
+
+From these relations one can derive that, $t \equiv 0\mod{13} \iff \exists q \in \mathbb{Z} | t=13q$ and that 
+
+\begin{align}
+    \begin{split}
+    13q & \equiv -30 \equiv -13 \mod{17}\\
+    13q & \equiv -13 \mod{29}\\
+    13q & \equiv -13 \mod{37}\\
+    13q & \equiv -13 \mod{641}\\
+    \end{split}
+\end{align}
+
+We can modify those relations as follow:
+
+\begin{align}
+    \begin{split}
+        13 (q + 1) & \equiv 0 \mod{17}\\
+        13 (q + 1) & \equiv 0 \mod{29}\\
+        13 (q + 1) & \equiv 0 \mod{37}\\
+        13 (q + 1) & \equiv 0 \mod{641}\\
+    \end{split}
+\end{align}
+
+13, 17, 29, 37 and 641 being distinct primes implies that: $$\exists q' \in \mathbb{Z} | q + 1 = 17 \times 37 \times 29 \times 641 q'$$.
+
+And $t = 13 \times 17 \times 37 \times 29 \times 641 q' - 13$. Looping over the values of $t$ gives the answer in less than 3 seconds on a laptop.
+
+
+\end{document}
