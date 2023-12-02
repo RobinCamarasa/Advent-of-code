@@ -37,3 +37,8 @@ isPossible (Red r, Blue g, Green b) (Game _ reveals)  = all isValid (concat reve
               Blue value -> value <= b
               Green value -> value <= g
 
+
+main :: IO()
+main = do
+    input <- readFile "puzzle.data"
+    (putStr . partOne . parseGames) input
