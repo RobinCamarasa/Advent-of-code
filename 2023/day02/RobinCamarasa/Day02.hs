@@ -37,8 +37,21 @@ isPossible (Red r, Blue g, Green b) (Game _ reveals)  = all isValid (concat reve
               Blue value -> value <= b
               Green value -> value <= g
 
+partTwo :: [Game] -> String
+partTwo games = "Part two: " ++ (show cumulatedPowerSets) ++ "\n"
+    where cumulatedPowerSets = foldr (+) 0 (map powerSet games)
+    
+powerSet :: Game -> Int
+powerSet (Game _ reveals) = r * g * b
+    where (Red r, Blue b, Green g) = foldr aggregate (Red 0, Blue 0, Green 0) (concat reveals)
+          aggregate :: Cube -> (Cube, Cube, Cube) -> (Cube, Cube, Cube)
+          aggregate cube (Red rA, Blue bA, Green gA) = case cube of
+            Red value -> (Red (maximum [rA, value]), Blue bA, Green gA)
+            Blue value -> (Red rA, Blue (maximum [bA, value]), Green gA)
+            Green value -> (Red rA, Blue bA, Green (maximum [gA, value]))
 
 main :: IO()
 main = do
     input <- readFile "puzzle.data"
     (putStr . partOne . parseGames) input
+    (putStr . partTwo . parseGames) input
