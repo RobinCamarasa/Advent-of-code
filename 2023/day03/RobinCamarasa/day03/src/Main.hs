@@ -2,10 +2,12 @@ module Main (main) where
 
 import Data.Char as CHR
 import Test.Hspec
+import Data.Maybe
 
 
 data PuzzleValue = Value Int | Symbol Char | Blank deriving (Eq, Show)
 data Candidate = Candidate CoordinateRange Int deriving (Eq, Show)
+data GearCand = GearCand Coordinate deriving (Eq, Show)
 
 type Engine = [[PuzzleValue]]
 type EngineSize = Int
@@ -54,6 +56,34 @@ getEngineParts size
           recursiveValue :: [Candidate]
           recursiveValue = getEngineParts size engine candsQueue
 
+getPotentialGears :: Engine -> [GearCand]
+getPotentialGears engine = gearCands
+    where indexed = zip [0..] (concat engine)
+          size = length engine
+          indexedSymbols = filter (\(_, puzzleValue) -> isSymbol puzzleValue) indexed
+          gearCands = map (\(indexed, _) -> GearCand (indexed `divMod` size)) indexedSymbols
+          isSymbol :: PuzzleValue -> Bool
+          isSymbol (Symbol _) = True
+          isSymbol _ = False
+
+
+belong :: Candidate -> GearCand -> Bool
+belong (Candidate (xcoor, (ymin,ymax)) _) (GearCand (x, y)) = elem (x, y) [(x_, y_) | x_ <- [(xcoor-1) ..(xcoor+1)], y_ <- [ymin..ymax]]
+
+maybeGearValue :: [Candidate] -> GearCand -> Maybe Int
+maybeGearValue candidates gear =
+        if length connectedParts == 2 then Just (foldr candidatesProduct 1 connectedParts) else Nothing
+     where connectedParts = filter (`belong` gear) candidates
+           candidatesProduct :: Candidate -> Int -> Int
+           candidatesProduct (Candidate _ value) value' = value * value'
+
+partTwo :: String -> Int
+partTwo puzzleInput = (foldr (+) 0) $ catMaybes $ (map (maybeGearValue candidates)) $ gearCandidates
+    where candidates = getCandidates size engine []
+          gearCandidates = getPotentialGears engine
+          engine = mkEngine puzzleInput
+          size = length engine
+
 partOne :: String -> Int
 partOne puzzleInput = foldr (+) 0 $ map (\(Candidate _ value) -> value) parts
     where engine = mkEngine puzzleInput
@@ -63,15 +93,14 @@ partOne puzzleInput = foldr (+) 0 $ map (\(Candidate _ value) -> value) parts
 main :: IO ()
 main = do
   puzzleInput <- readFile "data/day03.txt"
-  (putStrLn .  (++ "\n") . ("Part one" ++) . show) $ partOne puzzleInput
+  (putStrLn .  (++ "\n") . ("Part one: " ++) . show) $ partOne puzzleInput
+  (putStrLn .  (++ "\n") . ("Part two: " ++) . show) $ partTwo puzzleInput
 
 testEngine :: Engine
 testEngine = mkEngine "#.45\n350.\n1235\n#123"
 
 test :: IO ()
 test = hspec $ do
-
-    -- Tests translate
     describe "Check character translation" $ do
         it ". is Blank" $ do
             (translate '.') `shouldBe` Blank
@@ -80,16 +109,14 @@ test = hspec $ do
         it "1 is Value 1" $ do
             (translate '1') `shouldBe` (Value 1)
 
-    -- Test mkEngine
     describe "Check puzzle input parsing" $ do
         it "..4#\\n.3.. is [[Blank, Blank, Value 4, Symbol #], [Blank, Value 3, Blank, Blank]]" $ do
             (mkEngine "..4#\n.3..") `shouldBe` [[Blank, Blank, Value 4, Symbol '#'], [Blank, Value 3, Blank, Blank]]
 
-    -- Test getCandidates
     describe "Check if candidates are correctly found" $ do
         it ((show testEngine) ++ "should have 4 candidates") $ do
             (length $ getCandidates 4 testEngine []) `shouldBe` 4
 
     describe "Check if engine parts are correctly found" $ do
-        it ((show testEngine) ++ "should have 3 parts") $ do
+        it ("Test engine should have 3 parts") $ do
             (length $ getEngineParts 4 testEngine $ getCandidates 4 testEngine []) `shouldBe` 3
