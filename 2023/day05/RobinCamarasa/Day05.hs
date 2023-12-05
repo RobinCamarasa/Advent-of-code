@@ -1,5 +1,3 @@
-module Day05 where
-
 import Data.Maybe
 
 import Data.List.Split as SPL
@@ -10,9 +8,10 @@ data MapEntry = MapEntry {to :: String, entries :: [Entry]} deriving (Eq, Show)
 
 type Step = (String, Int)
 type StepRange = (String, (Int, Int))
+type Range = (Int, Int)
 type Almanach = MAP.Map String MapEntry
 
--- parseInput :: String -> ([StepRange], [Step], Almanach)
+parseInput :: String -> ([StepRange], [Step], Almanach)
 parseInput puzzleInput = (addSeed seedRanges, addSeed seedValues, MAP.fromList . (map toKeyMapEntry) $ maps)
     where (seeds:maps) = SPL.splitOn "\n\n" puzzleInput
           toInt value =  (read value :: Int)
@@ -37,30 +36,38 @@ getValue almanach step@(key, value)
                   | otherwise = -(dest + delta)
                       where delta = value - src
 
-getRange :: Almanach -> StepRange -> [StepRange]
-getRange almanach step@(key, (stepMin, stepRange))
+
+getRanges :: Almanach -> StepRange -> [StepRange]
+getRanges almanach step@(key, range) 
     | not . (MAP.member key) $ almanach = [step]
-    | otherwise = concat . (map (getRange almanach)) . catMaybes . (map update) $ entries
-        where (MapEntry {to=to, entries=entries}) = (almanach MAP.!) $ key
-              update (Entry {dest=destMin, src=entryMin, range=entryRange})
-                  | destRange < 0 = Nothing
-                  | otherwise = [Just (to, (leftBound, destRange))]
-                  where leftBound = max stepMin entryMin
-                        rightBound = min (stepMin + stepRange) (entryMin + entryRange)
-                        destBound = destMin + (leftBound - entryMin)
-                        destRange = rightBound - leftBound
+    | otherwise = concat . (map (getRanges almanach)) $ zip (repeat to) (map unEither eitherRanges)
+        where (MapEntry {to=to, entries=entries}) = almanach MAP.! key
+              applyEntries entry eitherRanges = concat $ map (applyEntry entry) $ eitherRanges
+              eitherRanges = foldr applyEntries [Left range] entries
+              unEither (Left range) = range
+              unEither (Right range) = range
 
-
-
-lowestFinalStep :: Almanach -> [Step] -> Int
-lowestFinalStep almanach = minimum . (map (snd . (getValue almanach)))
+applyEntry :: Entry -> Either Range Range -> [Either Range Range]
+applyEntry _ right@(Right range) = [right]
+applyEntry entry@(Entry {dest=leftDest, src=leftEnt, range=spanEnt}) range@(Left (leftRan, spanRan)) =
+    filter isImpossible [Left (leftRan, tooLowRange), Right (leftOut, inRangeRange), Left (leftTooHigh, tooHighRange)]
+    where tooLowRange = min spanRan (leftEnt - leftRan)
+          inLeft = max leftEnt leftRan
+          inRight = min (leftEnt + spanEnt) (leftRan + spanRan)
+          inRangeRange = inRight - inLeft
+          leftOut = (+ leftDest) (inLeft - leftEnt) 
+          leftTooHigh = max (leftRan) (leftEnt + spanEnt)
+          tooHighRange = min spanRan ((leftRan +  spanRan) - (leftEnt + spanEnt))
+          isImpossible :: Either Range Range -> Bool
+          isImpossible (Right (_, range)) = range > 0
+          isImpossible (Left (_, range)) = range > 0
 
 partOne :: String -> Int
-partOne puzzleInput = lowestFinalStep almanach initSteps
+partOne puzzleInput = minimum . (map (snd . (getValue almanach))) $ initSteps
     where (_, initSteps, almanach) = parseInput puzzleInput
 
--- partTwo :: String -> [Step]
-partTwo puzzleInput = minimum . map fst . map snd . concat . (map (getRange almanach)) $ initStepRanges
+partTwo :: String -> Int
+partTwo puzzleInput = minimum . map (fst . snd) . concat . map (getRanges almanach) $ initStepRanges
     where (initStepRanges, _, almanach) = parseInput puzzleInput
 
 main :: IO()
