@@ -49,12 +49,11 @@ cardsToGroups (a:q)
 evalCards :: [Card] -> Type
 evalCards = getType . (sortBy sortGroup) . cardsToGroups . sort
 
-parseInput :: String -> ([Type], [[Card]], [Bid])
-parseInput puzzleInput = (types, cards, bids)
+parseInput :: String -> ([[Card]], [Bid])
+parseInput puzzleInput = (cards, bids)
                          where hands = (map $ SPL.splitOn " ") . lines $ puzzleInput
                                cards = map ((map mkCard) . (\(a:_) -> a)) hands
                                bids = map (\(_:b:_) -> (read b :: Int)) hands
-                               types = map evalCards cards
 
 bestReplacement :: [[Card]] -> Card
 bestReplacement ((a:_):[]) = (14 :: Card)
@@ -68,11 +67,12 @@ replace cards = map (\x -> if x == 11 then bestReplacementCard else x) cards
 
 getScore = sum . (map (\(a, b) -> a * b)) . (zip [1..]) . (map (\(_, _, x) -> x)) . sort
 
-partOne puzzleInput =  getScore $ zip3 typ cards bids
-        where (typ, cards, bids)= parseInput puzzleInput
+partOne puzzleInput =  getScore $ zip3 types cards bids
+        where (cards, bids)= parseInput puzzleInput
+              types = map evalCards cards
 
 partTwo puzzleInput = getScore $ zip3 typ' cards'  bids
-        where (_, cards, bids)= parseInput puzzleInput
+        where (cards, bids) = parseInput puzzleInput
               cards' = map (map (\x -> if x == (11::Card) then (0::Card) else x)) cards
               typ' = map evalCards (map replace cards)
 
