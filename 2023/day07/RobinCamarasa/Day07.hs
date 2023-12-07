@@ -3,7 +3,28 @@ import Data.List.Split as SPL
 
 type Card = Int
 type Bid = Int
-data Type = High Card | Pair Card | Double Card Card | Three Card | Full Card Card | Four Card | Five Card deriving Show
+data Type = High Card | Pair Card | Double Card Card | Three Card | Full Card Card | Four Card | Five Card deriving (Eq, Show)
+
+instance Ord Type where
+    compare (Five _) (Five _) = EQ
+    compare (Five _) _ = GT
+    compare _ (Five _) = LT
+    compare (Four _) (Four _) = EQ
+    compare (Four _) _ = GT
+    compare _ (Four _) = LT
+    compare (Full _ _) (Full _ _) = EQ
+    compare (Full _ _) _ = GT
+    compare _ (Full _ _) = LT
+    compare (Three _) (Three _) = EQ
+    compare (Three _) _ = GT
+    compare _ (Three _) = LT
+    compare (Double _ _) (Double _ _) = EQ
+    compare (Double _ _) _ = GT
+    compare _ (Double _ _) = LT
+    compare (Pair _) (Pair _) = EQ
+    compare (Pair _) _ = GT
+    compare _ (Pair _) = LT
+    compare (High _) (High _) = EQ
 
 mkCard :: Char -> Card
 mkCard 'A' = 14
@@ -14,34 +35,47 @@ mkCard 'T' = 10
 mkCard val = (read (val:[]) :: Int)
 
 
-cardsToGroups :: String -> [[Card]]
+cardsToGroups :: [Card] -> [[Card]]
 cardsToGroups [] = []
-cardsToGroups (a:[]) = [[mkCard a]]
+cardsToGroups (a:[]) = [[a]]
 cardsToGroups (a:q)
-    | length lastEntry == 0 = [mkCard a] : (tail acc)
-    | (mkCard a) == (head lastEntry) = ((mkCard a):lastEntry) : (tail acc)
-    | otherwise = [mkCard a] : acc
+    | length lastEntry == 0 = [a] : (tail acc)
+    | a == (head lastEntry) = (a:lastEntry) : (tail acc)
+    | otherwise = [a] : acc
     where acc = cardsToGroups $ q
           lastEntry = head acc
 
-parseInput :: String -> [(([Card], Type), Bid)]
-parseInput = (map evalHand) . (map (SPL.splitOn " ")) . lines
-    where evalHand (a:b:_) = (
-                                (
-                                    (map mkCard) $ a, 
-                                    getType . 
-                                    (sortBy sortGroup) . 
-                                    cardsToGroups . sort $ a
-                                ), 
-                                read b :: Int
-                             )
 
-partOne :: String -> Int
-partOne = snd .
-          (foldr (\(_, bid) (i, acc) -> (i+1, acc + (i+1) * bid)) (0, 0)) .
-          reverse .
-          (sortBy (\(cardType, _) (cardType', _) -> sortHands cardType cardType')) . 
-          parseInput 
+evalCards :: [Card] -> Type
+evalCards = getType . (sortBy sortGroup) . cardsToGroups . sort
+
+parseInput :: String -> ([Type], [[Card]], [Bid])
+parseInput puzzleInput = (types, cards, bids)
+                         where hands = (map $ SPL.splitOn " ") . lines $ puzzleInput
+                               cards = map ((map mkCard) . (\(a:_) -> a)) hands
+                               bids = map (\(_:b:_) -> (read b :: Int)) hands
+                               types = map evalCards cards
+
+bestReplacement :: [[Card]] -> Card
+bestReplacement ((a:_):[]) = (14 :: Card)
+bestReplacement ((a:_):(b:_):_)
+    | a == (11 :: Card) = b
+    | otherwise = a
+
+replace :: [Card] -> [Card]
+replace cards = map (\x -> if x == 11 then bestReplacementCard else x) cards
+            where bestReplacementCard = bestReplacement . (sortBy sortGroup) . cardsToGroups . sort $ cards
+
+getScore = sum . (map (\(a, b) -> a * b)) . (zip [1..]) . (map (\(_, _, x) -> x)) . sort
+
+partOne puzzleInput =  getScore $ zip3 typ cards bids
+        where (typ, cards, bids)= parseInput puzzleInput
+
+partTwo puzzleInput = getScore $ zip3 typ' cards'  bids
+        where (_, cards, bids)= parseInput puzzleInput
+              cards' = map (map (\x -> if x == (11::Card) then (0::Card) else x)) cards
+              typ' = map evalCards (map replace cards)
+
 
 sortGroup :: [Card] -> [Card] -> Ordering
 sortGroup g1 g2 
@@ -61,28 +95,8 @@ getType (aa@(a:_):bb@(b:_):_)
     | (length aa) == 2 = Pair a
     | otherwise = High a
 
-sortHands :: ([Card], Type) -> ([Card], Type) -> Ordering
-sortHands (cards, Five _) (cards', Five _) = compare cards cards'
-sortHands (_, Five _) _ = GT
-sortHands _ (_, Five _) = LT
-sortHands (cards, Four _) (cards', Four _) = compare cards cards'
-sortHands (_, Four _) _ = GT
-sortHands _ (_, Four _) = LT
-sortHands (cards, Full _ _) (cards', Full _ _) = compare cards cards'
-sortHands (_, Full _ _) _ = GT
-sortHands _ (_, Full _ _) = LT
-sortHands (cards, Three _) (cards', Three _) = compare cards cards'
-sortHands (_, Three _) _ = GT
-sortHands _ (_, Three _) = LT
-sortHands (cards, Double _ _) (cards', Double _ _) = compare cards cards'
-sortHands (_, Double _ _) _ = GT
-sortHands _ (_, Double _ _) = LT
-sortHands (cards, Pair _) (cards', Pair _) = compare cards cards'
-sortHands (_, Pair _) _ = GT
-sortHands _ (_, Pair _) = LT
-sortHands (cards, High _) (cards', High _) = compare cards cards'
-
 main :: IO()
 main = do
     puzzleInput <- readFile "data/day07.txt"
-    putStr . show . partOne $ puzzleInput
+    putStr . ("Part one: " ++) . (++ "\n") . show . partOne $ puzzleInput
+    putStr . ("Part two: " ++) . (++ "\n") . show . partTwo $ puzzleInput
