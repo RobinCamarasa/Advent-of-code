@@ -13,8 +13,6 @@ mkCard 'J' = 11
 mkCard 'T' = 10
 mkCard val = (read (val:[]) :: Int)
 
--- groupToType :: [[Card]] -> Type
--- groupToType :: [[Card]] -> Type
 
 cardsToGroups :: String -> [[Card]]
 cardsToGroups [] = []
@@ -26,9 +24,17 @@ cardsToGroups (a:q)
     where acc = cardsToGroups $ q
           lastEntry = head acc
 
--- parseInput :: String -> [(([Card], Type), Bid)]
+parseInput :: String -> [(([Card], Type), Bid)]
 parseInput = (map evalHand) . (map (SPL.splitOn " ")) . lines
-    where evalHand (a:b:_) = (((map mkCard) $ a, getType . (sortBy sortGroup) . cardsToGroups . sort $ a), read b :: Int)
+    where evalHand (a:b:_) = (
+                                (
+                                    (map mkCard) $ a, 
+                                    getType . 
+                                    (sortBy sortGroup) . 
+                                    cardsToGroups . sort $ a
+                                ), 
+                                read b :: Int
+                             )
 
 partOne :: String -> Int
 partOne = snd .
