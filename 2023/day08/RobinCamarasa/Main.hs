@@ -36,11 +36,6 @@ computeCost graph (instruction:instructions) node
     where (leftNext, rightNext) = (MP.!) graph node
           nextNode = if instruction == 'L' then leftNext else rightNext
 
-
-update :: [String] -> Instruction -> Graph -> [String]
-update nodes instruction graph = map next nodes
-        where next node = let (left, right) = graph MP.! node in if instruction == 'L' then left else right
-
 partOne :: String -> Int
 partOne puzzleInput = getNbSteps "AAA" (cycle instructions) graph
     where (instructions, graph) = parseInput puzzleInput
