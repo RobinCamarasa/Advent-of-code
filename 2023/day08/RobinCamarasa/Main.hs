@@ -1,5 +1,5 @@
-import Data.List.Split
 import Data.List
+import Data.List.Split
 import qualified Data.Map as MP
 
 type Node = (String, String)
@@ -19,12 +19,10 @@ parseInput puzzleInput = (head $ splitPuzzleInput, MP.fromList . (zip nodes) $ z
           rights = map (slice 12 3) nodesDesc
 
 getNbSteps :: Graph -> [Instruction] -> String -> Int
-getNbSteps graph instructions node = 
-    let (left, right) = graph MP.! node in 
-        case (node, instructions) of
-            (_:_:"Z", _) -> 0
-            (_, 'L':q) -> 1 + (getNbSteps graph (drop 1 instructions) left)
-            (_, 'R':q) -> 1 + (getNbSteps graph (drop 1 instructions) right)
+getNbSteps graph (instruction:instructions) node
+    | (== 'Z') $ node !! 2 = 0
+    | otherwise = (+1) $ getNbSteps graph instructions next
+    where next = (if instruction == 'L' then fst else snd) . ((MP.!) graph) $ node
 
 partOne :: String -> Int
 partOne puzzleInput = getNbSteps graph (cycle instructions) "AAA" 
