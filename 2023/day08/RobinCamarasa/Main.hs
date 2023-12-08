@@ -18,26 +18,16 @@ parseInput puzzleInput = (head $ splitPuzzleInput, MP.fromList . (zip nodes) $ z
           lefts = map (slice 7 3) nodesDesc
           rights = map (slice 12 3) nodesDesc
 
-getNbSteps :: String -> [Instruction] -> Graph -> Int
-getNbSteps node instructions graph = 
+getNbSteps :: Graph -> [Instruction] -> String -> Int
+getNbSteps graph instructions node = 
     let (left, right) = graph MP.! node in 
         case (node, instructions) of
-            ("ZZZ", _) -> 0
-            (_, 'L':q) -> 1 + (getNbSteps left (drop 1 instructions) graph)
-            (_, 'R':q) -> 1 + (getNbSteps right (drop 1 instructions) graph)
-
-computeCost :: Graph -> 
-               [Instruction] ->
-               String ->
-               Cost
-computeCost graph (instruction:instructions) node
-    | (== "Z") $ drop 2 node  = 0
-    | otherwise = (1+) $ computeCost graph instructions nextNode 
-    where (leftNext, rightNext) = (MP.!) graph node
-          nextNode = if instruction == 'L' then leftNext else rightNext
+            (_:_:"Z", _) -> 0
+            (_, 'L':q) -> 1 + (getNbSteps graph (drop 1 instructions) left)
+            (_, 'R':q) -> 1 + (getNbSteps graph (drop 1 instructions) right)
 
 partOne :: String -> Int
-partOne puzzleInput = getNbSteps "AAA" (cycle instructions) graph
+partOne puzzleInput = getNbSteps graph (cycle instructions) "AAA" 
     where (instructions, graph) = parseInput puzzleInput
 
 
@@ -45,7 +35,7 @@ partTwo :: String -> Int
 partTwo puzzleInput = foldr lcm 1 costs
     where (instructions, graph) = parseInput puzzleInput
           getKeys = (filter (\x -> x !! 2 == 'A')) . MP.keys
-          costs = map (computeCost graph (cycle instructions)) . getKeys $ graph
+          costs = map (getNbSteps graph (cycle instructions)) . getKeys $ graph
 
 main :: IO()
 main = do
