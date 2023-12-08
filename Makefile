@@ -20,3 +20,6 @@ resources:
 
 start:
 	test -d "$(DIR)" && echo 'already exists' || make day DAY='$(DAY)' YEAR='$(YEAR)' USER='$(USER)'; cd "$(DIR)"; nvim ./
+
+show:
+	less README.md
