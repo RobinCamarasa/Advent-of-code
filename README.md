@@ -9,6 +9,7 @@ I take this as an excuse to learn of refresh my knowledge of a programming langu
 - [2021: Vimscript](/2021): (Yes really 17 days of vimscript)
 - [2022: Rust](/2022): I went blazingly fast (or at least I tried) for 11 days
 - [2023: Haskell](/2023): Side effect free since 23
+- [2024: ROC](/2024): Let's be Fast Friendly and Functional
 
 ## Automation
 
