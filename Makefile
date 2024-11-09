@@ -10,11 +10,10 @@ DIR := $(YEAR)/day$(DAY)/$(USER)
  
 day: resources copy
 	mkdir -p "$(DIR)/data"
-	curl "https://adventofcode.com/$(YEAR)/day/$(shell echo $(DAY) | sed -e 's/^0//g')/input" -H "cookie: ${SESSION}" -o  "$(DIR)/data/data.txt"
-	touch "$(DIR)/data/test.txt"
+	curl "https://adventofcode.com/$(YEAR)/day/$(shell echo $(DAY) | sed -e 's/^0//g')/input" -H "${AOC_COOKIE}" -o  "$(DIR)/data/data.txt"
 
 copy:
-	echo "https://adventofcode.com/$(YEAR)/day/$(shell echo $(DAY) | sed -e 's/^0//g')" | xsel -ib
+	echo "https://adventofcode.com/$(YEAR)/day/$(shell echo $(DAY) | sed -e 's/^0//g')" | wl-copy
 
 resources: copy
 	mkdir -p $(YEAR)/day$(DAY)
