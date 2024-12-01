@@ -13,7 +13,7 @@ day: resources copy
 	curl "https://adventofcode.com/$(YEAR)/day/$(shell echo $(DAY) | sed -e 's/^0//g')/input" -H "${AOC_COOKIE}" -o  "$(DIR)/data/data.txt"
 
 copy:
-	echo "https://adventofcode.com/$(YEAR)/day/$(shell echo $(DAY) | sed -e 's/^0//g')" | wl-copy
+	echo "https://adventofcode.com/$(YEAR)/day/$(shell echo $(DAY) | sed -e 's/^0//g')"
 
 resources: copy
 	mkdir -p $(YEAR)/day$(DAY)
