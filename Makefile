@@ -10,6 +10,7 @@ DIR := $(YEAR)/day$(DAY)/$(USER)
  
 day: resources copy
 	mkdir -p "$(DIR)/data"
+	curl https://adventofcode.com/$(YEAR)/day/$(shell echo $(DAY) | sed -e 's/^0//g') | hxselect -c article.day-desc | pandoc -f html -t markdown > "$(DIR)/README.md"
 	curl "https://adventofcode.com/$(YEAR)/day/$(shell echo $(DAY) | sed -e 's/^0//g')/input" -H "${AOC_COOKIE}" -o  "$(DIR)/data/data.txt"
 
 copy:
@@ -20,7 +21,7 @@ resources: copy
 	cp -r resources/$(YEAR) $(DIR)
 
 start: copy
-	test -d "$(DIR)" && echo 'already exists' || make day DAY='$(DAY)' YEAR='$(YEAR)' USER='$(USER)'; cd "$(DIR)"; nvim ./
+	test -d "$(DIR)" && echo 'already exists' || make day DAY='$(DAY)' YEAR='$(YEAR)' USER='$(USER)'
 
 show:
 	less README.md
