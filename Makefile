@@ -7,10 +7,11 @@ USER = RobinCamarasa
 SESSION := $(AOC_COOKIE)
 DAYDIR := $(YEAR)/day$(DAY)
 DIR := $(YEAR)/day$(DAY)/$(USER)
- 
+
+
 day: resources copy
 	mkdir -p "$(DIR)/data"
-	curl https://adventofcode.com/$(YEAR)/day/$(shell echo $(DAY) | sed -e 's/^0//g') | hxselect -c article.day-desc | pandoc -f html -t markdown > "$(DIR)/README.md"
+	curl "https://adventofcode.com/$(YEAR)/day/$(shell echo $(DAY) | sed -e 's/^0//g')" -H "${AOC_COOKIE}" | hxselect -c article.day-desc | pandoc -f html -t markdown > "$(DIR)/README.md"
 	curl "https://adventofcode.com/$(YEAR)/day/$(shell echo $(DAY) | sed -e 's/^0//g')/input" -H "${AOC_COOKIE}" -o  "$(DIR)/data/data.txt"
 
 copy:
