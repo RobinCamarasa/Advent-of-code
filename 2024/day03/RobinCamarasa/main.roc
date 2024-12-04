@@ -54,6 +54,7 @@ parseMul = \index, str ->
                     [n1, n2, ')', ..] if isDigit n1 && isDigit n2 -> Ok (Mul num (makeNum2 n1 n2))
                     [n1, n2, n3, ')', ..] if isDigit n1 && isDigit n2 && isDigit n3 -> Ok (Mul num (makeNum3 n1 n2 n3))
                     _ -> Err NoMatch
+
             Err NoMatch -> Err NoMatch
     else
         Err NoMatch
@@ -100,13 +101,16 @@ partTwo = \parsedContent ->
     n = str |> List.len
     List.range { start: At 0, end: Before n }
     |> List.keepOks (\index -> parsePart2 index str)
-    |> List.walk {state: Do, acc: 0} (\{state, acc}, element -> when element is
-        Mul x y if state == Do -> {state, acc: (acc + x * y)}
-        Mul _ _ -> {state, acc}
-        Do -> {state: Do, acc}
-        Dont -> {state: Dont, acc})
-    |> (\{state, acc} -> Num.toStr acc)
+    |> List.walk
+        { state: Do, acc: 0 }
+        (\{ state, acc }, element ->
+            when element is
+                Mul x y if state == Do -> { state, acc: (acc + x * y) }
+                Mul _ _ -> { state, acc }
+                Do -> { state: Do, acc }
+                Dont -> { state: Dont, acc })
+    |> \{ acc } -> Num.toStr acc
 
 expect solve { content: testContent, part: 1 } == "Part 1: 161"
-expect solve {content: testContent, part: 2} == "Part 2: 48"
+expect solve { content: testContent, part: 2 } == "Part 2: 48"
 
